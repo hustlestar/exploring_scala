@@ -1,4 +1,4 @@
-package com.hustlestar.scala.`for`.impatient.collections_13
+package com.hustlestar.scala_for_impatient.collections_13
 
 import scala.collection.immutable
 
@@ -52,7 +52,8 @@ object CollectionsTasks {
     */
   def collMkString[String](col: Traversable[String], sep: String): Predef.String = {
     //xs.reduceLeft(_ + _)
-    col.map(a => a.toString).reduceLeft(_ + sep + _)
+    col.map(a => a.toString)
+      .reduceLeft(_ + sep + _)
   }
 
   /**
@@ -94,7 +95,65 @@ object CollectionsTasks {
     */
   def zipAndMultiply(prices: Iterable[Int], quantities: Iterable[Int]): Iterable[Int] = {
     val zipped: Iterable[(Int, Int)] = prices.zip(quantities)
-    import Function.tupled
-    zipped.map(tupled { (t, h) => t * h })
+    zipped.map(Function.tupled(_ * _))
+  }
+
+  /**
+    * Task 8:
+    *
+    * Write a function that turns an array of `Double` values into a two-dimensional array.
+    * Pass the number of columns as a parameter. For example, with `Array(1, 2, 3, 4, 5, 6)`
+    * and three columns, return `Array(Array(1, 2, 3), Array(4, 5, 6))`. Use the `grouped` method.
+    */
+  def twoDimensionalArray(arr: Array[Double], columns: Int): Array[Array[Double]] = {
+    arr.grouped(columns)
+      .toArray
+  }
+
+  /**
+    * Task 9:
+    *
+    * Harry Hacker writes a program that accepts a sequence of file names on the command line.
+    * For each, he starts a new thread that reads the file and updates a letter frequency map
+    * declared as
+    * {{{
+    *  val frequencies = new scala.collection.mutable.HashMap[Char, Int] with
+    *    scala.collection.mutable.SynchronizedMap[Char, Int]
+    * }}}
+    * When reading a letter `c`, he calls
+    * {{{
+    *  frequencies(c) = frequencies.getOrElse (c, 0) + 1
+    * }}}
+    * Why won't this work? Will it work if he used instead
+    * {{{
+    *  import scala.collection.JavaConversions.asScalaConcurrentMap
+    *  val frequencies: scala.collection.mutable.ConcurrentMap[Char, Int] =
+    *    new java.util.concurrent.ConcurrentHashMap[Char, Int]
+    * }}}
+    *
+    * Solution:
+    *
+    * It won't work with SynchronizedMap since its not synchronize addition operation.
+    * And its not enough using ConcurrentHashMap, we also need to perform threadsafe addition.
+    * See the fixed code below.
+    */
+  def createLetterFrequencyMap(files: Iterable[String]): Map[Char, Int] = {
+    import scala.collection.JavaConversions.mapAsScalaConcurrentMap
+    val res = new java.util.concurrent.ConcurrentHashMap[Char, Int]
+    val threads = files.map(file => new Thread(new Runnable {
+      override def run(): Unit = {
+        println(Thread.currentThread().getName + " " + file)
+        file.toCharArray
+          .foreach {
+            c => {
+              val x = res.getOrElse(c, 0)
+              res.update(c, x + 1)
+            }
+          }
+      }
+    }))
+    threads.foreach(_.start)
+    threads.foreach(_.join)
+    res.toMap
   }
 }

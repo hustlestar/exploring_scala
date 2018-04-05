@@ -1,6 +1,6 @@
 package chapter_13_collections
 
-import com.hustlestar.scala.`for`.impatient.collections_13.CollectionsTasks
+import com.hustlestar.scala_for_impatient.collections_13.CollectionsTasks
 import org.scalatest.{FlatSpec, Matchers}
 
 class CollectionsTasksSpec extends FlatSpec with Matchers {
@@ -43,5 +43,18 @@ class CollectionsTasksSpec extends FlatSpec with Matchers {
     val res = CollectionsTasks.zipAndMultiply(List(10, 20, 30, 40, 50), List(3, 1, 4, 5))
     println(res)
     res shouldBe List(30, 20, 120, 200)
+  }
+
+  it should "make 2 dimensional array" in {
+    val res = CollectionsTasks.twoDimensionalArray(Array(1, 2, 3, 4, 5, 6), 3)
+    res.foreach(_.foreach(println))
+    val expected = Array(Array(1, 2, 3), Array(4, 5, 6))
+    res shouldBe expected
+  }
+
+  it should "make multithreading safe map" in {
+    val res = CollectionsTasks.createLetterFrequencyMap(List("abcd", "abw", "ewf", "zfs", "abs", "akka"))
+    val expected = Map('a' -> 5, 'b' -> 3, 'c' -> 1, 'd' -> 1, 'e' -> 1, 'f' -> 2, 'k' -> 2, 's' -> 2, 'w' -> 2, 'z' -> 1)
+    res shouldBe expected
   }
 }
