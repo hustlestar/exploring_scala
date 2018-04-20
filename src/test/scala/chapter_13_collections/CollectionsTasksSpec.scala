@@ -1,6 +1,5 @@
 package chapter_13_collections
 
-import com.hustlestar.scala_for_impatient.collections_13.CollectionsTasks
 import org.scalatest.{FlatSpec, Matchers}
 
 class CollectionsTasksSpec extends FlatSpec with Matchers {
@@ -53,8 +52,16 @@ class CollectionsTasksSpec extends FlatSpec with Matchers {
   }
 
   it should "make multithreading safe map" in {
-    val res = CollectionsTasks.createLetterFrequencyMap(List("abcd", "abw", "ewf", "zfs", "abs", "akka"))
-    val expected = Map('a' -> 5, 'b' -> 3, 'c' -> 1, 'd' -> 1, 'e' -> 1, 'f' -> 2, 'k' -> 2, 's' -> 2, 'w' -> 2, 'z' -> 1)
+    val input = List("abcd", "abw", "ewf", "zfs", "abs", "akka", "xxxerehrsdg", "xexxerrrx")
+    val res = CollectionsTasks.createLetterFrequencyMap(input)
+    val expected = input.mkString("").toCharArray.toList.map(c => c -> 1).groupBy(_._1).mapValues(_.map(_._2).sum)
     res shouldBe expected
   }
+
+//  it should "concurrently count frequency map" in {
+//    val input = List("abcd", "abw", "ewf", "zfs", "abs", "akka", "xxxerehrsdg", "xexxerrrx").mkString("")
+//    val res = CollectionsTasks.getLetterFrequencyMap2(input)
+//    val expected = input.mkString("").toCharArray.toList.map(c => c -> 1).groupBy(_._1).mapValues(_.map(_._2).sum)
+//    res shouldBe expected
+//  }
 }

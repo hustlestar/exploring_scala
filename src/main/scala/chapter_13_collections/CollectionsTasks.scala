@@ -1,6 +1,8 @@
-package com.hustlestar.scala_for_impatient.collections_13
+package chapter_13_collections
 
-import scala.collection.immutable
+import java.util.concurrent.locks.ReentrantReadWriteLock
+
+import scala.collection.{immutable, mutable}
 
 object CollectionsTasks {
 
@@ -138,16 +140,23 @@ object CollectionsTasks {
     * See the fixed code below.
     */
   def createLetterFrequencyMap(files: Iterable[String]): Map[Char, Int] = {
-    import scala.collection.JavaConversions.mapAsScalaConcurrentMap
-    val res = new java.util.concurrent.ConcurrentHashMap[Char, Int]
+    val res = new mutable.HashMap[Char, Int] with scala.collection.mutable.SynchronizedMap[Char, Int]
+    val lock = new ReentrantReadWriteLock().writeLock()
     val threads = files.map(file => new Thread(new Runnable {
       override def run(): Unit = {
-        println(Thread.currentThread().getName + " " + file)
         file.toCharArray
           .foreach {
             c => {
-              val x = res.getOrElse(c, 0)
-              res.update(c, x + 1)
+              import scala.util.control.Breaks._
+              breakable {
+                while (true) {
+                  if (lock.tryLock()) {
+                    res.update(c, res.getOrElse(c, 0) + 1)
+                    lock.unlock()
+                    break()
+                  }
+                }
+              }
             }
           }
       }
@@ -156,4 +165,30 @@ object CollectionsTasks {
     threads.foreach(_.join)
     res.toMap
   }
+
+  /**
+    * Task 10:
+    *
+    * Harry Hacker reads a file into a string and wants to use a parallel collection to update
+    * the letter frequencies concurrently on portions of the string. He uses the following code:
+    * {{{
+    *  val frequencies = new scala.collection.mutable.HashMap[Char, Int]
+    *  for (c <- str.par) frequencies(c) = frequencies.getOrElse(c, 0) + 1
+    * }}}
+    * Why is this a terrible idea? How can he really parallelize the computation?
+    * (Hint: Use aggregate.)
+    *
+    * Solution:
+    *
+    * Its bad, because with parallel computation we shouldn't mutate the shared data.
+    */
+//  def getLetterFrequencyMap2(str: String): Map[Char, Int] = {
+//    str.par.aggregate(new mutable.HashMap[Char, Int])((freq, c) => {
+//      freq(c) = freq.getOrElse(c, 0) + 1
+//      freq
+//    }, (freq, freq2) => {
+//      for ((k, v) <- freq2) freq(k) = freq.getOrElse(k, 0) + v
+//      freq
+//    }).toMap
+//  }
 }
